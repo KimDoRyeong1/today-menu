@@ -111,11 +111,26 @@ export default function MapTab({ restaurants, checkins, username, onCheckin, onC
     ? checkins.filter((c) => c.restaurantId === selectedRestaurant.id)
     : []
 
+  const naverClientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID
+
+  if (!naverClientId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-500 px-6 text-center">
+        <span className="text-4xl">🗺️</span>
+        <p className="font-semibold text-gray-700">지도를 불러올 수 없습니다</p>
+        <p className="text-sm">
+          Vercel 대시보드 → Settings → Environment Variables에서<br />
+          <code className="bg-gray-100 px-1 rounded text-xs">NEXT_PUBLIC_NAVER_MAP_CLIENT_ID</code> 를 추가한 뒤 재배포해주세요.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="relative h-full">
       <style>{`@keyframes pin-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}`}</style>
       <Script
-        src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}`}
+        src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${naverClientId}`}
         strategy="afterInteractive"
         onLoad={initMap}
       />
