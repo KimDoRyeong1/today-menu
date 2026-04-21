@@ -20,4 +20,4 @@ export const CAT_COLOR: Record<string, string> = {
 
 export const CATEGORIES = ['한식', '일식', '중식', '양식', '분식', '베트남', '기타']
 
-export const DEFAULT_CENTER: [number, number] = [37.4985, 127.028]
+export const DEFAULT_CENTER: [number, number] = [37.5547, 126.9203]

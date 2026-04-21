@@ -20,6 +20,7 @@ model Restaurant {
   phone        String?
   satiety      String
   speed        String
+  occasion     String    @default("meal")
   naverUrl     String?
   naverPlaceId String?
   isBase       Boolean   @default(false)

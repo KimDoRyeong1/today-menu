@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import SurveyTab from '@/components/SurveyTab'
 import ImportTab from '@/components/ImportTab'
 import GoingTab from '@/components/GoingTab'
+import LunchRevealModal from '@/components/LunchRevealModal'
 
 const MapTab = dynamic(() => import('@/components/MapTab'), { ssr: false })
 
@@ -45,6 +46,7 @@ export default function Home() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [checkins, setCheckins] = useState<Checkin[]>([])
   const [highlightIds, setHighlightIds] = useState<number[]>([])
+  const [lunchPicks, setLunchPicks] = useState<Restaurant[]>([])
   const [toast, setToast] = useState('')
 
   const today = new Date().toISOString().slice(0, 10)
@@ -75,8 +77,18 @@ export default function Home() {
   }, [fetchRestaurants, fetchCheckins])
 
   useEffect(() => {
-    const id = setInterval(fetchCheckins, 30000)
-    return () => clearInterval(id)
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`)
+    ws.onmessage = (e) => {
+      const data = JSON.parse(e.data)
+      if (data.type === 'checkins_changed') fetchCheckins()
+    }
+    ws.onclose = () => {
+      // 연결 끊기면 30초 폴링으로 fallback
+      const id = setInterval(fetchCheckins, 30000)
+      return () => clearInterval(id)
+    }
+    return () => ws.close()
   }, [fetchCheckins])
 
   function showToast(msg: string) {
@@ -93,13 +105,14 @@ export default function Home() {
 
   async function handleCheckin(restaurantId: number) {
     if (!username) return showToast('이름을 먼저 설정해주세요')
+    const alreadyCheckedIn = checkins.some((c) => c.username === username)
     await fetch('/api/checkins', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ restaurantId, username }),
     })
     fetchCheckins()
-    showToast('체크인 완료! 🙋')
+    showToast(alreadyCheckedIn ? '장소를 변경했어요! 🔄' : '체크인 완료! 🙋')
   }
 
   async function handleCheckout(checkinId: number) {
@@ -111,9 +124,14 @@ export default function Home() {
   function handleRandomLunch() {
     if (!restaurants.length) return
     const picks = [...restaurants].sort(() => Math.random() - 0.5).slice(0, 3)
-    setHighlightIds(picks.map((r) => r.id))
+    setLunchPicks(picks)
+  }
+
+  function confirmLunchPicks() {
+    setHighlightIds(lunchPicks.map((r) => r.id))
     setTab('map')
-    showToast(`${picks.map((r) => r.name).join(', ')} 🎲`)
+    showToast(`${lunchPicks.map((r) => r.name).join(', ')} 🎲`)
+    setLunchPicks([])
   }
 
   function goToMapRestaurant(restaurantId: number) {
@@ -215,6 +233,11 @@ export default function Home() {
           </button>
         ))}
       </nav>
+
+      {/* 점심 결정 모달 */}
+      {lunchPicks.length > 0 && (
+        <LunchRevealModal picks={lunchPicks} onConfirm={confirmLunchPicks} />
+      )}
 
       {/* 토스트 */}
       {toast && (

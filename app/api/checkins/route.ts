@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { broadcast } from '@/lib/wsBroadcast'
 
 export async function GET(req: Request) {
   try {
@@ -34,6 +35,7 @@ export async function POST(req: Request) {
       data: { restaurantId, username, date },
       include: { restaurant: true },
     })
+    broadcast({ type: 'checkins_changed' })
     return NextResponse.json(checkin, { status: 201 })
   } catch (e) {
     console.error(e)

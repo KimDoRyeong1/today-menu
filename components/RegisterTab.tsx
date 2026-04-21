@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CATEGORIES } from '@/lib/constants'
+import { CATEGORIES, CAT_EMOJI } from '@/lib/constants'
 
 type Props = {
   onRegistered: () => void
@@ -20,6 +20,7 @@ export default function RegisterTab({ onRegistered }: Props) {
     lng: '',
     satiety: 'medium',
     speed: 'normal',
+    occasion: 'meal',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -66,7 +67,7 @@ export default function RegisterTab({ onRegistered }: Props) {
     setLoading(false)
     if (res.ok) {
       onRegistered()
-      setForm({ name: '', category: '한식', menus: [''], price: '', priceLevel: 2, hours: '', phone: '', lat: '', lng: '', satiety: 'medium', speed: 'normal' })
+      setForm({ name: '', category: '한식', menus: [''], price: '', priceLevel: 2, hours: '', phone: '', lat: '', lng: '', satiety: 'medium', speed: 'normal', occasion: 'meal' })
     } else {
       setError('등록에 실패했습니다.')
     }
@@ -83,12 +84,24 @@ export default function RegisterTab({ onRegistered }: Props) {
         <input value={form.name} onChange={(e) => set('name', e.target.value)} className="mt-1 block w-full border rounded-xl px-3 py-2 text-sm" placeholder="식당 이름" />
       </label>
 
-      <label className="block">
+      <div>
         <span className="text-sm font-medium text-gray-700">카테고리</span>
-        <select value={form.category} onChange={(e) => set('category', e.target.value)} className="mt-1 block w-full border rounded-xl px-3 py-2 text-sm">
-          {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-        </select>
-      </label>
+        <div className="flex flex-wrap gap-2 mt-1">
+          {CATEGORIES.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => set('category', c)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors
+                ${form.category === c
+                  ? 'bg-orange-500 text-white border-orange-500'
+                  : 'bg-white text-gray-500 border-gray-200'}`}
+            >
+              {CAT_EMOJI[c]} {c}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div>
         <span className="text-sm font-medium text-gray-700">메뉴</span>
@@ -133,6 +146,25 @@ export default function RegisterTab({ onRegistered }: Props) {
             <option value="slow">느림</option>
           </select>
         </label>
+      </div>
+
+      <div>
+        <span className="text-sm font-medium text-gray-700">용도</span>
+        <div className="flex gap-2 mt-1">
+          {([['meal', '🍱 식사'], ['party', '🍻 회식']] as const).map(([val, label]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => set('occasion', val)}
+              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors
+                ${form.occasion === val
+                  ? 'bg-orange-500 text-white border-orange-500'
+                  : 'bg-white text-gray-500 border-gray-200'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <label className="block">
