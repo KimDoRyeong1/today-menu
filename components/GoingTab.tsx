@@ -76,19 +76,12 @@ export default function GoingTab({ checkins, username, onCheckin, onCheckout }: 
                     </span>
                   ))}
                 </div>
-                {isMyRestaurant ? (
+                {isMyRestaurant && (
                   <button
                     onClick={() => onCheckout(myCheckin!.id)}
                     className="mt-3 w-full py-1.5 rounded-xl text-sm bg-gray-100 text-gray-600"
                   >
                     체크아웃
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => onCheckin(Number(rid))}
-                    className="mt-3 w-full py-1.5 rounded-xl text-sm bg-orange-50 text-orange-600 font-medium"
-                  >
-                    나도 갈래! 🙋
                   </button>
                 )}
               </div>

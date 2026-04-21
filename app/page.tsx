@@ -236,7 +236,15 @@ export default function Home() {
 
       {/* 점심 결정 모달 */}
       {lunchPicks.length > 0 && (
-        <LunchRevealModal picks={lunchPicks} onConfirm={confirmLunchPicks} />
+        <LunchRevealModal
+          picks={lunchPicks}
+          onConfirm={confirmLunchPicks}
+          onSelect={(id) => {
+            setHighlightIds([id])
+            setTab('map')
+            setLunchPicks([])
+          }}
+        />
       )}
 
       {/* 토스트 */}

@@ -170,7 +170,7 @@ export default function MapTab({ restaurants, checkins, username, onCheckin, onC
             )}
           </div>
 
-          <div className="px-5 pt-2 shrink-0">
+          <div className="px-5 pt-2 shrink-0 flex flex-col gap-2">
             {myCheckin?.restaurantId === selectedRestaurant.id ? (
               <button
                 onClick={() => { onCheckout(myCheckin.id); setSelectedRestaurant(null) }}
@@ -186,6 +186,14 @@ export default function MapTab({ restaurants, checkins, username, onCheckin, onC
                 나도 갈래! 🙋
               </button>
             )}
+            <a
+              href={`https://map.naver.com/p/directions/-/-/${selectedRestaurant.lng},${selectedRestaurant.lat},${encodeURIComponent(selectedRestaurant.name)}/walk`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 rounded-2xl bg-green-500 text-white font-semibold text-base text-center active:scale-[0.98] transition-transform block"
+            >
+              🗺️ 길찾기
+            </a>
           </div>
         </div>
       )}

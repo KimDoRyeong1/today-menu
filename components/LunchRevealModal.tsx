@@ -8,6 +8,7 @@ type Restaurant = { id: number; name: string; category: string }
 type Props = {
   picks: Restaurant[]
   onConfirm: () => void
+  onSelect: (restaurantId: number) => void
 }
 
 // /public/memes/ 폴더에 이미지를 넣으면 여기에 파일명을 추가하세요
@@ -38,7 +39,7 @@ async function fetchGif(): Promise<string | null> {
   }
 }
 
-export default function LunchRevealModal({ picks, onConfirm }: Props) {
+export default function LunchRevealModal({ picks, onConfirm, onSelect }: Props) {
   const [phase, setPhase] = useState<'searching' | 'reveal'>('searching')
   const [gifUrl, setGifUrl] = useState<string | null>(null)
   const [dotCount, setDotCount] = useState(1)
@@ -128,21 +129,23 @@ export default function LunchRevealModal({ picks, onConfirm }: Props) {
 
           <div className="w-full flex flex-col gap-3">
             {picks.map((r, i) => (
-              <div
+              <button
                 key={r.id}
-                className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center gap-3 shadow-xl"
+                onClick={() => onSelect(r.id)}
+                className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center gap-3 shadow-xl active:scale-[0.97] active:bg-orange-50 transition-transform text-left"
                 style={{ animation: `pop-in 0.45s cubic-bezier(0.34,1.56,0.64,1) ${0.1 + i * 0.1}s both` }}
               >
                 <span className="text-3xl shrink-0">
                   {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}
                 </span>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="font-bold text-base leading-tight truncate">{r.name}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
                     {CAT_EMOJI[r.category] ?? '🍽️'} {r.category}
                   </p>
                 </div>
-              </div>
+                <span className="text-gray-300 text-sm shrink-0">지도 →</span>
+              </button>
             ))}
           </div>
 
