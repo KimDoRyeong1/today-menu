@@ -39,20 +39,19 @@ export default function MapTab({ restaurants, checkins, username, onCheckin, onC
 
   useEffect(() => {
     if (typeof window === 'undefined' || !mapRef.current || mapInstanceRef.current) return
-
     import('leaflet').then((L) => {
-      // Fix default icon
       delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
         iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
       })
-
-      const map = L.map(mapRef.current!).setView(DEFAULT_CENTER, 16)
+      const map = L.map(mapRef.current!, { zoomControl: false }).setView(DEFAULT_CENTER, 16)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+        attribution: '© OpenStreetMap',
       }).addTo(map)
+      // 줌 컨트롤을 오른쪽 하단으로
+      L.control.zoom({ position: 'bottomright' }).addTo(map)
       mapInstanceRef.current = map
     })
   }, [])
@@ -61,8 +60,6 @@ export default function MapTab({ restaurants, checkins, username, onCheckin, onC
     if (!mapInstanceRef.current) return
     import('leaflet').then((L) => {
       const map = mapInstanceRef.current!
-
-      // 기존 마커 제거
       Object.values(markersRef.current).forEach((m) => m.remove())
       markersRef.current = {}
 
@@ -77,15 +74,15 @@ export default function MapTab({ restaurants, checkins, username, onCheckin, onC
           html: `
             <div style="position:relative;display:inline-block">
               <div style="
-                background:${color};border-radius:50%;width:36px;height:36px;
+                background:${color};border-radius:50%;width:40px;height:40px;
                 display:flex;align-items:center;justify-content:center;
-                font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,0.3);
-                ${isHighlighted ? 'animation:bounce 0.6s infinite alternate;border:3px solid #fff;' : ''}
+                font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,0.25);
+                ${isHighlighted ? 'animation:bounce 0.5s infinite alternate;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.4);' : ''}
               ">${emoji}</div>
-              ${checkinCount > 0 ? `<div style="position:absolute;top:-4px;right:-4px;background:#FF5722;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:bold">${checkinCount}</div>` : ''}
+              ${checkinCount > 0 ? `<div style="position:absolute;top:-4px;right:-4px;background:#FF5722;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:bold;border:1.5px solid #fff">${checkinCount}</div>` : ''}
             </div>`,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
         })
 
         const marker = L.marker([r.lat, r.lng], { icon }).addTo(map)
@@ -97,13 +94,16 @@ export default function MapTab({ restaurants, checkins, username, onCheckin, onC
         const highlighted = restaurants.filter((r) => highlightIds.includes(r.id))
         if (highlighted.length > 0) {
           const bounds = L.latLngBounds(highlighted.map((r) => [r.lat, r.lng]))
-          map.fitBounds(bounds, { padding: [60, 60] })
+          map.fitBounds(bounds, { padding: [80, 80] })
         }
       }
     })
   }, [restaurants, checkins, highlightIds])
 
   const myCheckin = checkins.find((c) => c.username === username)
+  const checkinMembers = selectedRestaurant
+    ? checkins.filter((c) => c.restaurantId === selectedRestaurant.id)
+    : []
 
   return (
     <div className="relative h-full">
@@ -111,44 +111,84 @@ export default function MapTab({ restaurants, checkins, username, onCheckin, onC
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       <div ref={mapRef} className="w-full h-full" />
 
+      {/* 바텀시트 백드롭 */}
       {selectedRestaurant && (
-        <div className="absolute bottom-4 left-4 right-4 bg-white rounded-2xl shadow-xl p-4 z-[1000]">
-          <div className="flex justify-between items-start mb-2">
+        <div
+          className="bottom-sheet-backdrop"
+          onClick={() => setSelectedRestaurant(null)}
+        />
+      )}
+
+      {/* 식당 팝업 */}
+      {selectedRestaurant && (
+        <div
+          className="bottom-sheet absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[1000] flex flex-col"
+          style={{ maxHeight: '75dvh', paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+        >
+          {/* 핸들 */}
+          <div className="pt-3 pb-1 flex justify-center shrink-0">
+            <div className="w-10 h-1 bg-gray-200 rounded-full" />
+          </div>
+
+          {/* 헤더 */}
+          <div className="flex justify-between items-start px-5 pb-3 shrink-0">
             <div>
-              <h3 className="font-bold text-lg">{selectedRestaurant.name}</h3>
-              <span className="text-sm text-gray-500">{selectedRestaurant.category} · {selectedRestaurant.price}</span>
+              <h3 className="font-bold text-lg leading-tight">{selectedRestaurant.name}</h3>
+              <p className="text-sm text-gray-400 mt-0.5">{selectedRestaurant.category} · {selectedRestaurant.price}</p>
             </div>
-            <button onClick={() => setSelectedRestaurant(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
-          </div>
-          <div className="flex flex-wrap gap-1 mb-3">
-            {selectedRestaurant.menus.map((m) => (
-              <span key={m} className="bg-orange-50 text-orange-700 text-xs px-2 py-0.5 rounded-full">{m}</span>
-            ))}
-          </div>
-          <div className="text-xs text-gray-500 mb-3 space-y-0.5">
-            {selectedRestaurant.hours && <p>🕐 {selectedRestaurant.hours}</p>}
-            {selectedRestaurant.phone && <p>📞 {selectedRestaurant.phone}</p>}
-          </div>
-          <div className="flex flex-wrap gap-1 mb-3 text-xs text-gray-500">
-            {checkins.filter((c) => c.restaurantId === selectedRestaurant.id).map((c) => (
-              <span key={c.id} className="bg-gray-100 px-2 py-0.5 rounded-full">{c.username}</span>
-            ))}
-          </div>
-          {myCheckin?.restaurantId === selectedRestaurant.id ? (
             <button
-              onClick={() => { onCheckout(myCheckin.id); setSelectedRestaurant(null) }}
-              className="w-full py-2 rounded-xl bg-gray-100 text-gray-600 font-semibold"
+              onClick={() => setSelectedRestaurant(null)}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 text-sm shrink-0"
             >
-              체크아웃
+              ✕
             </button>
-          ) : (
-            <button
-              onClick={() => { onCheckin(selectedRestaurant.id); setSelectedRestaurant(null) }}
-              className="w-full py-2 rounded-xl bg-orange-500 text-white font-semibold"
-            >
-              나도 갈래! 🙋
-            </button>
-          )}
+          </div>
+
+          {/* 스크롤 영역 */}
+          <div className="scrollable flex-1 px-5">
+            {/* 메뉴 칩 */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {selectedRestaurant.menus.slice(0, 5).map((m) => (
+                <span key={m} className="bg-orange-50 text-orange-600 text-xs px-2.5 py-1 rounded-full font-medium">{m}</span>
+              ))}
+            </div>
+
+            {/* 부가정보 */}
+            <div className="text-xs text-gray-400 mb-3 space-y-1">
+              {selectedRestaurant.hours && <p>🕐 {selectedRestaurant.hours}</p>}
+              {selectedRestaurant.phone && <p>📞 {selectedRestaurant.phone}</p>}
+            </div>
+
+            {/* 체크인 멤버 */}
+            {checkinMembers.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {checkinMembers.map((c) => (
+                  <span key={c.id} className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full">
+                    {c.username}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 체크인/아웃 버튼 */}
+          <div className="px-5 pt-2 shrink-0">
+            {myCheckin?.restaurantId === selectedRestaurant.id ? (
+              <button
+                onClick={() => { onCheckout(myCheckin.id); setSelectedRestaurant(null) }}
+                className="w-full py-3.5 rounded-2xl bg-gray-100 text-gray-600 font-semibold text-base active:scale-[0.98] transition-transform"
+              >
+                체크아웃
+              </button>
+            ) : (
+              <button
+                onClick={() => { onCheckin(selectedRestaurant.id); setSelectedRestaurant(null) }}
+                className="w-full py-3.5 rounded-2xl bg-orange-500 text-white font-semibold text-base active:scale-[0.98] transition-transform"
+              >
+                나도 갈래! 🙋
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

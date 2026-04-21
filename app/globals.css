@@ -3,24 +3,85 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 스크롤 가능한 영역에만 스크롤 허용 */
+.scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* 스크롤바 숨기기 (모바일) */
+.scrollable::-webkit-scrollbar {
+  display: none;
+}
+.scrollable {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* 하단 탭바 safe area */
+.tab-bar {
+  padding-bottom: max(env(safe-area-inset-bottom), 4px);
+}
+
+/* 터치 피드백 제거 */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 터치 타겟 최소 44px 보장 */
+button {
+  min-height: 44px;
+}
+
+/* 입력 시 iOS 확대 방지 */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* 지도 터치 */
+.leaflet-container {
+  touch-action: pan-x pan-y;
+}
+
+/* 바텀시트 backdrop */
+.bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 999;
+  animation: fadeIn 0.2s ease;
+}
+
+/* 바텀시트 슬라이드업 */
+.bottom-sheet {
+  animation: slideUp 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }

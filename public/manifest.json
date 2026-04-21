@@ -1,0 +1,22 @@
+{
+  "name": "오늘 뭐드세요?",
+  "short_name": "오늘메뉴",
+  "description": "점심 메뉴 고민 해결 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FF5722",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

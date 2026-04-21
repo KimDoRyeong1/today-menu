@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import SurveyTab from '@/components/SurveyTab'
-import RegisterTab from '@/components/RegisterTab'
+import ImportTab from '@/components/ImportTab'
 import GoingTab from '@/components/GoingTab'
 
 const MapTab = dynamic(() => import('@/components/MapTab'), { ssr: false })
@@ -29,14 +29,14 @@ type Checkin = {
   restaurant: Restaurant
 }
 
-type Tab = 'map' | 'survey' | 'register' | 'going'
+type Tab = 'map' | 'survey' | 'import' | 'going'
 
-const TABS = [
-  { id: 'map', label: '🗺️ 지도' },
-  { id: 'survey', label: '🎯 추천' },
-  { id: 'register', label: '➕ 등록' },
-  { id: 'going', label: '👥 누가가나' },
-] as const
+const TABS: { id: Tab; emoji: string; label: string }[] = [
+  { id: 'map',    emoji: '🗺️', label: '지도' },
+  { id: 'survey', emoji: '🎯', label: '추천' },
+  { id: 'import', emoji: '➕', label: '등록' },
+  { id: 'going',  emoji: '👥', label: '누가가나' },
+]
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>('map')
@@ -74,7 +74,6 @@ export default function Home() {
     fetchCheckins()
   }, [fetchRestaurants, fetchCheckins])
 
-  // 30초 폴링
   useEffect(() => {
     const id = setInterval(fetchCheckins, 30000)
     return () => clearInterval(id)
@@ -86,9 +85,10 @@ export default function Home() {
   }
 
   function saveName() {
-    if (!nameInput.trim()) return
-    localStorage.setItem('lunchapp_name', nameInput.trim())
-    setUsername(nameInput.trim())
+    const name = nameInput.trim()
+    if (!name) return
+    localStorage.setItem('lunchapp_name', name)
+    setUsername(name)
   }
 
   async function handleCheckin(restaurantId: number) {
@@ -109,11 +109,11 @@ export default function Home() {
   }
 
   function handleRandomLunch() {
-    if (restaurants.length === 0) return
+    if (!restaurants.length) return
     const picks = [...restaurants].sort(() => Math.random() - 0.5).slice(0, 3)
     setHighlightIds(picks.map((r) => r.id))
     setTab('map')
-    showToast(`오늘의 추천: ${picks.map((r) => r.name).join(', ')} 🎲`)
+    showToast(`${picks.map((r) => r.name).join(', ')} 🎲`)
   }
 
   function goToMapRestaurant(restaurantId: number) {
@@ -121,22 +121,29 @@ export default function Home() {
     setTab('map')
   }
 
+  /* ── 온보딩 화면 ── */
   if (!username) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-8">
-        <p className="text-4xl mb-4">🍱</p>
-        <h1 className="text-2xl font-bold mb-2">오늘 뭐드세요?</h1>
-        <p className="text-gray-500 mb-8 text-sm">이름을 입력하면 시작됩니다</p>
+      <div
+        className="flex flex-col items-center justify-center bg-white px-8"
+        style={{ height: '100dvh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <p className="text-6xl mb-5">🍱</p>
+        <h1 className="text-2xl font-bold mb-1">오늘 뭐드세요?</h1>
+        <p className="text-gray-400 mb-10 text-sm">점심 메뉴 고민 해결기</p>
         <div className="flex gap-2 w-full max-w-xs">
           <input
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && saveName()}
-            className="flex-1 border rounded-xl px-3 py-2"
-            placeholder="이름 입력"
+            className="flex-1 border border-gray-200 rounded-2xl px-4 py-3 text-base outline-none focus:border-orange-400"
+            placeholder="이름을 입력하세요"
             autoFocus
           />
-          <button onClick={saveName} className="bg-orange-500 text-white px-4 py-2 rounded-xl font-semibold">
+          <button
+            onClick={saveName}
+            className="bg-orange-500 text-white px-5 py-3 rounded-2xl font-semibold text-base active:scale-95 transition-transform"
+          >
             시작
           </button>
         </div>
@@ -144,19 +151,26 @@ export default function Home() {
     )
   }
 
+  /* ── 메인 화면 ── */
   return (
-    <div className="h-full flex flex-col max-w-md mx-auto bg-white shadow-sm">
+    <div
+      className="flex flex-col bg-white w-full max-w-lg mx-auto"
+      style={{ height: '100dvh' }}
+    >
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-4 py-3 border-b bg-white">
-        <h1 className="font-bold text-lg">오늘 뭐드세요? 🍱</h1>
+      <header
+        className="flex items-center justify-between px-4 bg-white border-b border-gray-100 shrink-0"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 10px)', paddingBottom: '10px' }}
+      >
+        <h1 className="font-bold text-base">오늘 뭐드세요? 🍱</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={handleRandomLunch}
-            className="bg-orange-500 text-white text-xs px-3 py-1.5 rounded-full font-semibold"
+            className="bg-orange-500 text-white text-xs px-3 py-2 rounded-full font-semibold active:scale-95 transition-transform"
           >
             오늘점심 🎲
           </button>
-          <span className="text-sm text-gray-500">{username}</span>
+          <span className="text-sm text-gray-400 max-w-16 truncate">{username}</span>
         </div>
       </header>
 
@@ -173,7 +187,9 @@ export default function Home() {
           />
         )}
         {tab === 'survey' && <SurveyTab onGoToMap={goToMapRestaurant} />}
-        {tab === 'register' && <RegisterTab onRegistered={() => { fetchRestaurants(); showToast('식당 등록 완료! ✅') }} />}
+        {tab === 'import' && (
+          <ImportTab onImported={() => { fetchRestaurants(); showToast('식당이 추가됐습니다! ✅') }} />
+        )}
         {tab === 'going' && (
           <GoingTab
             checkins={checkins}
@@ -185,21 +201,27 @@ export default function Home() {
       </main>
 
       {/* 하단 탭바 */}
-      <nav className="flex border-t bg-white">
+      <nav className="tab-bar flex border-t border-gray-100 bg-white shrink-0">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-1 py-3 text-xs font-medium transition-colors ${tab === t.id ? 'text-orange-500 border-t-2 border-orange-500 -mt-px' : 'text-gray-400'}`}
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors active:opacity-70
+              ${tab === t.id ? 'text-orange-500' : 'text-gray-400'}`}
+            style={{ minHeight: 52 }}
           >
-            {t.label}
+            <span className="text-xl leading-none">{t.emoji}</span>
+            <span className="text-[10px] font-medium">{t.label}</span>
           </button>
         ))}
       </nav>
 
       {/* 토스트 */}
       {toast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50">
+        <div
+          className="fixed left-1/2 -translate-x-1/2 bg-gray-900/90 text-white text-sm px-5 py-2.5 rounded-full shadow-xl z-[9999] backdrop-blur-sm"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 72px)' }}
+        >
           {toast}
         </div>
       )}

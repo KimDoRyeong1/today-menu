@@ -35,7 +35,7 @@ export default function GoingTab({ checkins, username, onCheckin, onCheckout }: 
   const today = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
 
   return (
-    <div className="p-4 overflow-y-auto h-full">
+    <div className="p-4 scrollable h-full">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-bold text-lg">오늘 누가 가나요? 👥</h2>
         <span className="text-xs text-gray-400">{today}</span>
