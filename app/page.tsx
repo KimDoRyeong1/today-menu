@@ -72,7 +72,7 @@ export default function Home() {
   }, [today])
 
   useEffect(() => {
-    const saved = localStorage.getItem('lunchapp_name')
+    const saved = sessionStorage.getItem('lunchapp_name')
     if (saved) setUsername(saved)
     fetchRestaurants()
     fetchCheckins()
@@ -109,7 +109,7 @@ export default function Home() {
   function saveName() {
     const name = nameInput.trim()
     if (!name) return
-    localStorage.setItem('lunchapp_name', name)
+    sessionStorage.setItem('lunchapp_name', name)
     setUsername(name)
     if (restaurants.length > 0) {
       const picks = [...restaurants].sort(() => Math.random() - 0.5).slice(0, 3)
