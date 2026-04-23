@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import SurveyTab from '@/components/SurveyTab'
 import ImportTab from '@/components/ImportTab'
@@ -32,7 +33,7 @@ type Checkin = {
 
 type Tab = 'map' | 'survey' | 'import' | 'going'
 
-const TABS: { id: Tab; emoji: string; label: string }[] = [
+const ALL_TABS: { id: Tab; emoji: string; label: string }[] = [
   { id: 'map',    emoji: '🗺️', label: '지도' },
   { id: 'survey', emoji: '🎯', label: '추천' },
   { id: 'import', emoji: '➕', label: '등록' },
@@ -40,6 +41,9 @@ const TABS: { id: Tab; emoji: string; label: string }[] = [
 ]
 
 export default function Home() {
+  const pathname = usePathname()
+  const isAdmin = pathname === '/admin'
+  const TABS = isAdmin ? ALL_TABS : ALL_TABS.filter((t) => t.id !== 'import')
   const [tab, setTab] = useState<Tab>('map')
   const [username, setUsername] = useState('')
   const [nameInput, setNameInput] = useState('')
