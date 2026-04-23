@@ -59,6 +59,33 @@ export default function MapTab({ restaurants, checkins, username, onCheckin, onC
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // 회사 위치 마커
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current) return
+    const officeContent = `<div style="
+      display:flex;flex-direction:column;align-items:center;gap:2px;cursor:default;
+    ">
+      <div style="
+        width:32px;height:32px;border-radius:50%;
+        background:#1565C0;border:2.5px solid #fff;
+        display:flex;align-items:center;justify-content:center;
+        font-size:16px;line-height:1;
+        box-shadow:0 2px 8px rgba(0,0,0,0.3);
+      ">🏢</div>
+      <div style="
+        background:#1565C0;color:#fff;
+        font-size:9px;font-weight:700;
+        padding:1px 5px;border-radius:8px;
+        white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.2);
+      ">앵커스</div>
+    </div>`
+    new naver.maps.Marker({
+      position: new naver.maps.LatLng(DEFAULT_CENTER[0], DEFAULT_CENTER[1]),
+      map: mapInstanceRef.current,
+      icon: { content: officeContent, anchor: new naver.maps.Point(16, 42) },
+    })
+  }, [mapReady])
+
   useEffect(() => {
     if (!mapReady || !mapInstanceRef.current) return
     const map = mapInstanceRef.current
