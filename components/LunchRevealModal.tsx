@@ -9,6 +9,7 @@ type Props = {
   picks: Restaurant[]
   onConfirm: () => void
   onSelect: (restaurantId: number) => void
+  onReroll: () => void
 }
 
 // /public/memes/ 폴더에 이미지를 넣으면 여기에 파일명을 추가하세요
@@ -39,7 +40,7 @@ async function fetchGif(): Promise<string | null> {
   }
 }
 
-export default function LunchRevealModal({ picks, onConfirm, onSelect }: Props) {
+export default function LunchRevealModal({ picks, onConfirm, onSelect, onReroll }: Props) {
   const [phase, setPhase] = useState<'searching' | 'reveal'>('searching')
   const [gifUrl, setGifUrl] = useState<string | null>(null)
   const [dotCount, setDotCount] = useState(1)
@@ -149,13 +150,23 @@ export default function LunchRevealModal({ picks, onConfirm, onSelect }: Props) 
             ))}
           </div>
 
-          <button
-            onClick={onConfirm}
-            className="mt-1 bg-orange-500 text-white font-bold px-8 py-3.5 rounded-full text-base shadow-lg active:scale-95 transition-transform"
+          <div
+            className="mt-1 flex gap-2 w-full"
             style={{ animation: `pop-in 0.45s cubic-bezier(0.34,1.56,0.64,1) ${0.1 + picks.length * 0.1}s both` }}
           >
-            지도에서 확인! 🗺️
-          </button>
+            <button
+              onClick={onReroll}
+              className="flex-1 bg-gray-700 text-white font-bold py-3.5 rounded-full text-base shadow-lg active:scale-95 transition-transform"
+            >
+              다시 뽑기 🎲
+            </button>
+            <button
+              onClick={onConfirm}
+              className="flex-1 bg-orange-500 text-white font-bold py-3.5 rounded-full text-base shadow-lg active:scale-95 transition-transform"
+            >
+              지도에서 확인! 🗺️
+            </button>
+          </div>
         </div>
       )}
     </div>

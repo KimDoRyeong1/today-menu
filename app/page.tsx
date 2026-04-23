@@ -47,7 +47,9 @@ export default function Home() {
   const [checkins, setCheckins] = useState<Checkin[]>([])
   const [highlightIds, setHighlightIds] = useState<number[]>([])
   const [lunchPicks, setLunchPicks] = useState<Restaurant[]>([])
+  const [lunchRevealKey, setLunchRevealKey] = useState(0)
   const [toast, setToast] = useState('')
+  const [pendingInitialReveal, setPendingInitialReveal] = useState(false)
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -96,11 +98,25 @@ export default function Home() {
     setTimeout(() => setToast(''), 2500)
   }
 
+  useEffect(() => {
+    if (!pendingInitialReveal || restaurants.length === 0) return
+    setPendingInitialReveal(false)
+    const picks = [...restaurants].sort(() => Math.random() - 0.5).slice(0, 3)
+    setLunchPicks(picks)
+    setLunchRevealKey(k => k + 1)
+  }, [pendingInitialReveal, restaurants])
+
   function saveName() {
     const name = nameInput.trim()
     if (!name) return
     localStorage.setItem('lunchapp_name', name)
     setUsername(name)
+    if (restaurants.length > 0) {
+      const picks = [...restaurants].sort(() => Math.random() - 0.5).slice(0, 3)
+      setLunchPicks(picks)
+    } else {
+      setPendingInitialReveal(true)
+    }
   }
 
   async function handleCheckin(restaurantId: number) {
@@ -125,6 +141,7 @@ export default function Home() {
     if (!restaurants.length) return
     const picks = [...restaurants].sort(() => Math.random() - 0.5).slice(0, 3)
     setLunchPicks(picks)
+    setLunchRevealKey(k => k + 1)
   }
 
   function confirmLunchPicks() {
@@ -237,6 +254,7 @@ export default function Home() {
       {/* 점심 결정 모달 */}
       {lunchPicks.length > 0 && (
         <LunchRevealModal
+          key={lunchRevealKey}
           picks={lunchPicks}
           onConfirm={confirmLunchPicks}
           onSelect={(id) => {
@@ -244,6 +262,7 @@ export default function Home() {
             setTab('map')
             setLunchPicks([])
           }}
+          onReroll={handleRandomLunch}
         />
       )}
 
